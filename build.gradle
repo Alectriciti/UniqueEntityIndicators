@@ -1,20 +1,20 @@
 plugins {
-	id 'java'
+    id 'java'
 }
 
 repositories {
-	mavenLocal()
+    //mavenLocal()
+    mavenCentral()
 	maven {
 		url = 'https://repo.runelite.net'
 		content {
 			includeGroupByRegex("net\\.runelite.*")
 		}
 	}
-	mavenCentral()
 }
 
 def runeLiteVersion = 'latest.release'
-def pluginMainClass = 'com.example.ExamplePluginTest'
+def pluginMainClass = 'com.alectriciti.entityindicator.EntityTaggerPlugin'
 
 dependencies {
 	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
