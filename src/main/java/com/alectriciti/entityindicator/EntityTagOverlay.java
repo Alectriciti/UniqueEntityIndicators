@@ -1,12 +1,11 @@
 package com.alectriciti.entityindicator;
 
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
+import java.awt.*;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import net.runelite.api.*;
+import net.runelite.api.Point;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -56,6 +55,20 @@ public class EntityTagOverlay extends Overlay
         return null;
     }
 
+    private void renderOutline(Graphics2D g, net.runelite.api.Actor actor, Color color)
+    {
+        java.awt.Shape hull = actor.getConvexHull();
+
+        if (hull == null)
+        {
+            return;
+        }
+
+        g.setColor(color);
+        g.setStroke(new java.awt.BasicStroke(2));
+        g.draw(hull);
+    }
+
     private void renderPlayers(Graphics2D graphics, WorldView world_view)
     {
         for (Player player : world_view.players())
@@ -95,6 +108,11 @@ public class EntityTagOverlay extends Overlay
             {
                 OverlayUtil.renderPolygon(graphics, poly, tag.getColor());
             }
+        }
+
+        if (tag.getDisplayMode().showsOutline())
+        {
+            renderOutline(graphics, actor, tag.getColor());
         }
 
         if (tag.getDisplayMode().showsText())

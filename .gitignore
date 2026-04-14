@@ -9,3 +9,4 @@ nb-configuration.xml
 nbproject/
 gradle.properties
 icon.png
+/out

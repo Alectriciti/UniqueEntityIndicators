@@ -1,20 +1,24 @@
 package com.alectriciti.entityindicator;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.List;
 import javax.inject.Inject;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
 public class EntityTaggerPanel extends PluginPanel
 {
     private final EntityTagStore tag_store;
-    private final JPanel npc_list_panel = new JPanel();
+
+    private final JSplitPane split_pane;
     private final JPanel player_list_panel = new JPanel();
+    private final JPanel npc_list_panel = new JPanel();
 
     @Inject
     public EntityTaggerPanel(EntityTagStore tag_store)
@@ -28,13 +32,6 @@ public class EntityTaggerPanel extends PluginPanel
         top_container.setLayout(new BoxLayout(top_container, BoxLayout.Y_AXIS));
         top_container.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        // --- Row 1: description ---
-        JPanel label_row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        label_row.setBackground(ColorScheme.DARK_GRAY_COLOR);
-//        JLabel top_label = new JLabel("Ctrl + right-click players or NPCs to add them here.");
-//        label_row.add(top_label);
-
-        // --- Row 2: buttons ---
         JPanel button_row = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         button_row.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
@@ -46,7 +43,6 @@ public class EntityTaggerPanel extends PluginPanel
         export_btn.setToolTipText("Exports to your Clipboard");
         clear_btn.setToolTipText("Clears the Tag List");
 
-        // --- Import ---
         import_btn.addActionListener(e ->
         {
             String data = getClipboard();
@@ -59,14 +55,12 @@ public class EntityTaggerPanel extends PluginPanel
             refresh();
         });
 
-        // --- Export ---
         export_btn.addActionListener(e ->
         {
             String data = tag_store.exportToString();
             setClipboard(data);
         });
 
-        // --- Clear (with confirm) ---
         clear_btn.addActionListener(e ->
         {
             int result = javax.swing.JOptionPane.showConfirmDialog(
@@ -87,24 +81,37 @@ public class EntityTaggerPanel extends PluginPanel
         button_row.add(export_btn);
         button_row.add(clear_btn);
 
-        top_container.add(label_row);
         top_container.add(button_row);
-
         add(top_container, BorderLayout.NORTH);
-
-        npc_list_panel.setLayout(new BoxLayout(npc_list_panel, BoxLayout.Y_AXIS));
-        npc_list_panel.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         player_list_panel.setLayout(new BoxLayout(player_list_panel, BoxLayout.Y_AXIS));
         player_list_panel.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        JScrollPane npc_scroll_pane = new JScrollPane(npc_list_panel);
-        npc_scroll_pane.setBorder(null);
-        add(npc_scroll_pane, BorderLayout.CENTER);
+        npc_list_panel.setLayout(new BoxLayout(npc_list_panel, BoxLayout.Y_AXIS));
+        npc_list_panel.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         JScrollPane player_scroll_pane = new JScrollPane(player_list_panel);
         player_scroll_pane.setBorder(null);
-        add(player_scroll_pane, BorderLayout.CENTER);
+
+        JScrollPane npc_scroll_pane = new JScrollPane(npc_list_panel);
+        npc_scroll_pane.setBorder(null);
+
+        split_pane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, player_scroll_pane, npc_scroll_pane);
+
+        split_pane.setDividerSize(12);
+        split_pane.setResizeWeight(0.5);
+        split_pane.setContinuousLayout(true);
+        split_pane.setBorder(null);
+        split_pane.setDividerLocation(0.5);
+
+        add(split_pane, BorderLayout.CENTER);
+
+        // Ensure divider is centered initially
+//        java.awt.EventQueue.invokeLater(() -> split_pane.setDividerLocation(0.5));
+
+        add(split_pane, BorderLayout.CENTER);
+
+        refresh();
     }
 
     private String getClipboard()
@@ -138,12 +145,21 @@ public class EntityTaggerPanel extends PluginPanel
 
     public void refresh()
     {
+        split_pane.setDividerSize(8);
+        split_pane.setResizeWeight(0.5);
+
+        split_pane.repaint();
+        split_pane.revalidate();
+
+
         player_list_panel.removeAll();
         npc_list_panel.removeAll();
 
         List<EntityTag> tags = tag_store.getAll();
         for (EntityTag tag : tags)
         {
+            if (tag == null || tag.getScope() == null) continue;
+
             switch(tag.getScope()){
                 case PLAYER:
                     player_list_panel.add(new EntityTagEntryPanel(tag, tag_store, this::refresh));

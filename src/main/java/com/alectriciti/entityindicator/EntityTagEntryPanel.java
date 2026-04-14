@@ -30,6 +30,7 @@ public class EntityTagEntryPanel extends JPanel
     private final JCheckBox enabled_box = new JCheckBox("On");
     private final JCheckBox name_box = new JCheckBox("Name");
     private final JCheckBox tile_box = new JCheckBox("Floor");
+    private final JCheckBox outline_box = new JCheckBox("Outline");
     private final JButton color_button = new JButton(" ");
     private final JButton delete_button = new JButton("X");
 
@@ -39,6 +40,12 @@ public class EntityTagEntryPanel extends JPanel
         this.tag_store = tag_store;
         this.delete_refresh = delete_refresh;
 
+
+        outline_box.setSelected(tag.getDisplayMode().showsOutline());
+        outline_box.setOpaque(false);
+        outline_box.setToolTipText("Highlight entity outline");
+
+        outline_box.addActionListener(e -> updateDisplayMode());
 
         setLayout(new BorderLayout(GAP, 0));
         setBackground(deriveBackground(tag.getColor()));
@@ -96,7 +103,7 @@ public class EntityTagEntryPanel extends JPanel
         label_row.add(title);
         label_row.add(label_field);
 
-        JPanel toggle_row = new JPanel(new GridLayout(1, 3, GAP, 0));
+        JPanel toggle_row = new JPanel(new GridLayout(1, 4, GAP, 0));
         toggle_row.setOpaque(false);
         toggle_row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
         toggle_row.setOpaque(false);
@@ -119,6 +126,7 @@ public class EntityTagEntryPanel extends JPanel
 
         toggle_row.add(enabled_box);
         toggle_row.add(name_box);
+        toggle_row.add(outline_box);
         toggle_row.add(tile_box);
 
         center_panel.add(label_row);
@@ -208,28 +216,18 @@ public class EntityTagEntryPanel extends JPanel
 
     private void updateDisplayMode()
     {
-        boolean show_name = name_box.isSelected();
-        boolean show_tile = tile_box.isSelected();
+        boolean text = name_box.isSelected();
+        boolean tile = tile_box.isSelected();
+        boolean outline = outline_box.isSelected();
 
-        if (!show_name && !show_tile)
+        // prevent all-off state
+        if (!text && !tile && !outline)
         {
             name_box.setSelected(true);
-            show_name = true;
+            text = true;
         }
 
-        if (show_name && show_tile)
-        {
-            tag.setDisplayMode(EntityTagDisplayMode.BOTH);
-        }
-        else if (show_name)
-        {
-            tag.setDisplayMode(EntityTagDisplayMode.TEXT);
-        }
-        else
-        {
-            tag.setDisplayMode(EntityTagDisplayMode.TILE);
-        }
-
+        tag.setDisplayMode(EntityTagDisplayMode.from(text, tile, outline));
         tag_store.upsert(tag);
     }
 
@@ -246,26 +244,17 @@ public class EntityTagEntryPanel extends JPanel
         tag.setLabel(text);
         tag.setEnabled(enabled_box.isSelected());
 
-        boolean show_name = name_box.isSelected();
-        boolean show_tile = tile_box.isSelected();
+        boolean btext = name_box.isSelected();
+        boolean tile = tile_box.isSelected();
+        boolean outline = outline_box.isSelected();
 
-        if (!show_name && !show_tile)
+        if (!btext && !tile && !outline)
         {
             name_box.setSelected(true);
-            tag.setDisplayMode(EntityTagDisplayMode.TEXT);
+            btext = true;
         }
-        else if (show_name && show_tile)
-        {
-            tag.setDisplayMode(EntityTagDisplayMode.BOTH);
-        }
-        else if (show_name)
-        {
-            tag.setDisplayMode(EntityTagDisplayMode.TEXT);
-        }
-        else
-        {
-            tag.setDisplayMode(EntityTagDisplayMode.TILE);
-        }
+
+        tag.setDisplayMode(EntityTagDisplayMode.from(btext, tile, outline));
 
         tag_store.upsert(tag);
     }

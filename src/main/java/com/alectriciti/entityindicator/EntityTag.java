@@ -10,7 +10,7 @@ public class EntityTag
     private String label;
     private int rgb;
     private boolean enabled = true;
-    private EntityTagDisplayMode display_mode = EntityTagDisplayMode.BOTH;
+    private EntityTagDisplayMode display_mode = EntityTagDisplayMode.ALL;
 
     public EntityTag()
     {
@@ -119,7 +119,7 @@ public class EntityTag
 
     public EntityTagDisplayMode getDisplayMode()
     {
-        return display_mode;
+        return display_mode == null ? EntityTagDisplayMode.ALL : display_mode;
     }
 
     public void setDisplayMode(EntityTagDisplayMode display_mode)
