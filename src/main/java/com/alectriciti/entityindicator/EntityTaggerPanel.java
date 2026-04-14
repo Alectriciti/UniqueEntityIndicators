@@ -109,8 +109,6 @@ public class EntityTaggerPanel extends PluginPanel
         // Ensure divider is centered initially
 //        java.awt.EventQueue.invokeLater(() -> split_pane.setDividerLocation(0.5));
 
-        add(split_pane, BorderLayout.CENTER);
-
         refresh();
     }
 
@@ -178,4 +176,6 @@ public class EntityTaggerPanel extends PluginPanel
         npc_list_panel.revalidate();
         npc_list_panel.repaint();
     }
+
+
 }

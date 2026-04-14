@@ -11,18 +11,21 @@ import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
 import net.runelite.client.ui.overlay.OverlayUtil;
+import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
 
 @Singleton
 public class EntityTagOverlay extends Overlay
 {
     private final Client client;
     private final EntityTagStore tag_store;
+    private final ModelOutlineRenderer modelOutlineRenderer;
 
     @Inject
-    public EntityTagOverlay(Client client, EntityTagStore tag_store)
+    public EntityTagOverlay(Client client, EntityTagStore tag_store, ModelOutlineRenderer modelOutlineRenderer)
     {
         this.client = client;
         this.tag_store = tag_store;
+        this.modelOutlineRenderer = modelOutlineRenderer;
 
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.ABOVE_SCENE);
@@ -55,18 +58,23 @@ public class EntityTagOverlay extends Overlay
         return null;
     }
 
-    private void renderOutline(Graphics2D g, net.runelite.api.Actor actor, Color color)
+    private void renderOutline(Graphics2D g, Actor actor, Color color)
     {
-        java.awt.Shape hull = actor.getConvexHull();
+//        java.awt.Shape hull = actor.
 
-        if (hull == null)
-        {
-            return;
-        }
+        int width = 4;
+        int feather =4;
+        modelOutlineRenderer.drawOutline(actor, width, color, feather);
 
-        g.setColor(color);
-        g.setStroke(new java.awt.BasicStroke(2));
-        g.draw(hull);
+//        if (hull == null)
+//        {
+
+//            return;
+//        }
+
+//        g.setColor(color);
+//        g.setStroke(new BasicStroke(2));
+//        g.draw(hull);
     }
 
     private void renderPlayers(Graphics2D graphics, WorldView world_view)
