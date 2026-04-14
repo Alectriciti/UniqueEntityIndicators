@@ -131,4 +131,35 @@ public class EntityTag
     {
         return scope.name() + ":" + key;
     }
+
+    public String serialize()
+    {
+        return getScope() + "|" + getKey() + "|" + getDisplayName() + "|" +
+                getLabel() + "|" + getColor().getRGB() + "|" +
+                getDisplayMode() + "|" + isEnabled();
+    }
+
+    public static EntityTag deserialize(String line)
+    {
+        try
+        {
+            String[] p = line.split("\\|");
+
+            EntityTag tag = new EntityTag();
+            tag.setScope(EntityTagScope.valueOf(p[0]));
+            tag.setKey(p[1]);
+            tag.setDisplayName(p[2]);
+            tag.setLabel(p[3]);
+            tag.setColor(new Color(Integer.parseInt(p[4])));
+            tag.setDisplayMode(EntityTagDisplayMode.valueOf(p[5]));
+            tag.setEnabled(Boolean.parseBoolean(p[6]));
+
+            return tag;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
 }

@@ -6,6 +6,7 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.KeyCode;
+import net.runelite.api.Menu;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.NPC;
@@ -26,7 +27,7 @@ import java.awt.*;
 @Slf4j
 @PluginDescriptor(
         name = "Entity Tagger",
-        description = "Tag players and NPCs from sidebar panel"
+        description = "Tag players and NPCs from sidebar panel with custom names, highlights, and colors"
 )
 public class EntityTaggerPlugin extends Plugin
 {
@@ -109,36 +110,38 @@ public class EntityTaggerPlugin extends Plugin
         final int npc_id = npc != null ? npc.getId() : -1;
         final String player_name = player != null ? player.getName() : null;
         final String npc_name_raw = npc != null ? npc.getName() : null;
-
-        client.createMenuEntry(-1)
+        Menu menu = client.getMenu();
+        menu.createMenuEntry(-1)
                 .setOption("Create Tag")
                 .setTarget(target)
                 .setType(MenuAction.RUNELITE)
                 .setWorldViewId(entry.getWorldViewId())
                 .onClick(e ->
-                        client_thread.invokeLater(() ->
+                {
+                    // STEP 1: do ALL game logic on client thread
+                    client_thread.invokeLater(() ->
+                    {
+                        if (is_player)
                         {
-                            if (is_player)
-                            {
-                                tag_store.touchPlayer(player_name);
-                            }
-                            else
-                            {
-                                String clean = RuneTextUtil.stripAllTags(npc_name_raw);
-                                Color parsed = RuneTextUtil.extractColor(npc_name_raw);
+                            tag_store.touchPlayer(player_name);
+                        }
+                        else
+                        {
+                            String clean = RuneTextUtil.stripAllTags(npc_name_raw);
+                            tag_store.touchNpc(npc_id, clean);
+                        }
 
-                                EntityTag tag = tag_store.touchNpc(npc_id, clean);
-
-                                if (parsed != null)
-                                {
-                                    tag.setColor(parsed);
-                                    tag_store.upsert(tag);
-                                }
-                            }
-
+                        // STEP 2: schedule UI update AFTER client thread completes
+                        SwingUtilities.invokeLater(() ->
+                        {
                             panel.refresh();
-                            client_toolbar.openPanel(nav_button);
-                        })
-                );
+
+                            if (nav_button != null)
+                            {
+                                client_toolbar.openPanel(nav_button);
+                            }
+                        });
+                    });
+                });
     }
 }

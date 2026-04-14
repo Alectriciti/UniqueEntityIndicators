@@ -167,4 +167,64 @@ public class EntityTagStore
         save();
         return tag;
     }
+
+    public String exportToString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        for (EntityTag tag : getAll())
+        {
+            sb.append(tag.serialize()).append("\n");
+        }
+
+        return sb.toString();
+    }
+    public void importFromString(String data)
+    {
+        if (data == null || data.isEmpty())
+        {
+            return;
+        }
+
+        String[] lines = data.split("\n");
+
+        for (String line : lines)
+        {
+            EntityTag tag = EntityTag.deserialize(line);
+            if (tag == null)
+            {
+                continue;
+            }
+
+            // 🔥 ignore overlapping NPCs (by ID)
+            if (tag.getScope() == EntityTagScope.NPC)
+            {
+                if (existsNpc(tag.getKey()))
+                {
+                    continue;
+                }
+            }
+
+            upsert(tag);
+        }
+    }
+
+    public void clear()
+    {
+        getAll().clear();
+        save(); // assuming you already persist
+    }
+
+    private boolean existsNpc(String key)
+    {
+        for (EntityTag tag : getAll())
+        {
+            if (tag.getScope() == EntityTagScope.NPC && tag.getKey().equals(key))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
