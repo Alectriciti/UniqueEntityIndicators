@@ -4,14 +4,11 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.KeyCode;
+import net.runelite.api.*;
 import net.runelite.api.Menu;
-import net.runelite.api.MenuAction;
-import net.runelite.api.MenuEntry;
-import net.runelite.api.NPC;
-import net.runelite.api.Player;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.SoundEffectPlayed;
+import net.runelite.client.audio.AudioPlayer;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -26,13 +23,14 @@ import java.awt.*;
 
 @Slf4j
 @PluginDescriptor(
-        name = "Entity Tagger",
-        description = "Tag players and NPCs from sidebar panel with custom names, highlights, and colors"
+        name = "Highlighter",
+        description = "Highlight players and NPCs from sidebar panel with custom names, highlights, and colors"
 )
 public class EntityTaggerPlugin extends Plugin
 {
     private static final String TAG_PLAYER = "Tag player";
     private static final String TAG_NPC = "Tag NPC";
+    private static final String TAG_OBJECT = "Tag Object";
 
     @Inject private Client client;
     @Inject private ClientThread client_thread;
@@ -90,12 +88,6 @@ public class EntityTaggerPlugin extends Plugin
 
         MenuEntry entry = event.getMenuEntry();
 
-        // prevent duplicates (VERY important)
-        if (entry.getOption().equals("Create Tag"))
-        {
-            return;
-        }
-
         final Player player = entry.getPlayer();
         final NPC npc = entry.getNpc();
 
@@ -104,15 +96,30 @@ public class EntityTaggerPlugin extends Plugin
             return;
         }
 
+        Menu menu = client.getMenu();
+
+        // Check if "Highlight" option already exists in the menu to prevent duplicates
+        if (menu.getMenuEntries() != null)
+        {
+            for (MenuEntry existingEntry : menu.getMenuEntries())
+            {
+                if (existingEntry.getOption() != null && existingEntry.getOption().equals("Highlight"))
+                {
+                    // "Highlight" option already exists, don't add another one
+                    return;
+                }
+            }
+        }
+
         final boolean is_player = player != null;
 
         final String target = entry.getTarget();
         final int npc_id = npc != null ? npc.getId() : -1;
         final String player_name = player != null ? player.getName() : null;
         final String npc_name_raw = npc != null ? npc.getName() : null;
-        Menu menu = client.getMenu();
+        
         menu.createMenuEntry(-1)
-                .setOption("Create Tag")
+                .setOption("Highlight")
                 .setTarget(target)
                 .setType(MenuAction.RUNELITE)
                 .setWorldViewId(entry.getWorldViewId())
@@ -144,4 +151,5 @@ public class EntityTaggerPlugin extends Plugin
                     });
                 });
     }
+
 }

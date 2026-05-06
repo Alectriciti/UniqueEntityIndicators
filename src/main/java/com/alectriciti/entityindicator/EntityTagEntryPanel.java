@@ -27,12 +27,15 @@ public class EntityTagEntryPanel extends JPanel
     private final Runnable delete_refresh;
 
     private final JTextField label_field = new JTextField(12);
-    private final JCheckBox enabled_box = new JCheckBox("On");
     private final JCheckBox name_box = new JCheckBox("Name");
     private final JCheckBox tile_box = new JCheckBox("Floor");
     private final JCheckBox outline_box = new JCheckBox("Outline");
     private final JButton color_button = new JButton(" ");
     private final JButton delete_button = new JButton("X");
+
+    private boolean hovered = false;
+    private boolean selected = false;
+
 
     public EntityTagEntryPanel(EntityTag tag, EntityTagStore tag_store, Runnable delete_refresh)
     {
@@ -49,10 +52,7 @@ public class EntityTagEntryPanel extends JPanel
 
         setLayout(new BorderLayout(GAP, 0));
         setBackground(deriveBackground(tag.getColor()));
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR),
-                new EmptyBorder(6, 8, 6, 8)
-        ));
+        updateBorder();
         setMaximumSize(new Dimension(Integer.MAX_VALUE, CARD_HEIGHT));
         setPreferredSize(new Dimension(0, CARD_HEIGHT));
         setMinimumSize(new Dimension(0, CARD_HEIGHT));
@@ -108,23 +108,22 @@ public class EntityTagEntryPanel extends JPanel
         toggle_row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
         toggle_row.setOpaque(false);
 
-        enabled_box.setSelected(tag.isEnabled());
         name_box.setSelected(tag.getDisplayMode().showsText());
+        outline_box.setSelected(tag.getDisplayMode().showsOutline());
         tile_box.setSelected(tag.getDisplayMode().showsTile());
 
-        enabled_box.setToolTipText("Enable or disable this tag");
         name_box.setToolTipText("Show overhead name");
+        outline_box.setToolTipText("Show outline");
         tile_box.setToolTipText("Show floor tile");
 
-        enabled_box.setOpaque(false);
         name_box.setOpaque(false);
+        outline_box.setOpaque(false);
         tile_box.setOpaque(false);
 
-        enabled_box.addActionListener(e -> saveStateOnly());
         name_box.addActionListener(e -> updateDisplayMode());
+        outline_box.addActionListener(e -> updateDisplayMode());
         tile_box.addActionListener(e -> updateDisplayMode());
 
-        toggle_row.add(enabled_box);
         toggle_row.add(name_box);
         toggle_row.add(outline_box);
         toggle_row.add(tile_box);
@@ -178,39 +177,69 @@ public class EntityTagEntryPanel extends JPanel
         add(center_panel, BorderLayout.CENTER);
         add(right_panel, BorderLayout.EAST);
 
+        updateBorder();
 
-
-        addMouseListener(new MouseListener() {
+        addMouseListener(new MouseListener()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
+            public void mouseEntered(MouseEvent e)
+            {
+                hovered = true;
+                updateBorder();
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
+            public void mouseExited(MouseEvent e)
+            {
+                hovered = false;
+                updateBorder();
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
+            public void mouseClicked(MouseEvent e)
+            {
+                requestFocusInWindow(); // important for keyboard nav
+                setSelected(true);
             }
 
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
+            @Override public void mousePressed(MouseEvent e) {}
+            @Override public void mouseReleased(MouseEvent e) {}
         });
+    }
+
+    public void setSelected(boolean selected)
+    {
+
+        this.selected = selected;
+        updateBorder();
+    }
+
+    private void updateBorder()
+    {
+        Color border_color;
+
+        if (selected)
+        {
+            border_color = tag.getColor(); // strong highlight
+        }
+        else if (hovered)
+        {
+            border_color = ColorScheme.PROGRESS_COMPLETE_COLOR; // RuneLite green-ish
+        }
+        else
+        {
+            border_color = ColorScheme.MEDIUM_GRAY_COLOR;
+        }
+
+        setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(border_color, selected ? 2 : 1),
+                new EmptyBorder(6, 8, 6, 8)
+        ));
     }
 
     private void saveStateOnly()
     {
-        tag.setEnabled(enabled_box.isSelected());
+//        tag.setEnabled(enabled_box.isSelected());
         tag_store.upsert(tag);
     }
 
@@ -242,7 +271,7 @@ public class EntityTagEntryPanel extends JPanel
         }
 
         tag.setLabel(text);
-        tag.setEnabled(enabled_box.isSelected());
+//        tag.setEnabled(enabled_box.isSelected());
 
         boolean btext = name_box.isSelected();
         boolean tile = tile_box.isSelected();

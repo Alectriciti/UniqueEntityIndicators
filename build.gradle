@@ -11,6 +11,9 @@ repositories {
 			includeGroupByRegex("net\\.runelite.*")
 		}
 	}
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 def runeLiteVersion = 'latest.release'
@@ -25,6 +28,7 @@ dependencies {
 	testImplementation 'junit:junit:4.12'
 	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
+    implementation name: 'HeroHud'
 }
 
 group = 'com.alectriciti'

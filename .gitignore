@@ -10,3 +10,5 @@ nbproject/
 gradle.properties
 icon.png
 /out
+libs/HeroHud-1.0-SNAPSHOT.jar
+libs/HeroHud.jar

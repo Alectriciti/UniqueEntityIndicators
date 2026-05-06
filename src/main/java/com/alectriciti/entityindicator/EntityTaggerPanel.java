@@ -5,10 +5,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.List;
 import javax.inject.Inject;
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
+import javax.swing.*;
+
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
@@ -19,6 +17,9 @@ public class EntityTaggerPanel extends PluginPanel
     private final JSplitPane split_pane;
     private final JPanel player_list_panel = new JPanel();
     private final JPanel npc_list_panel = new JPanel();
+
+    private final java.util.List<EntityTagEntryPanel> all_entries = new java.util.ArrayList<>();
+    private int selected_index = -1;
 
     @Inject
     public EntityTaggerPanel(EntityTagStore tag_store)
@@ -106,10 +107,42 @@ public class EntityTaggerPanel extends PluginPanel
 
         add(split_pane, BorderLayout.CENTER);
 
+        setFocusable(true);
+        requestFocusInWindow();
+//
+//        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(
+//                KeyStroke.getKeyStroke("UP"),
+//                "select_up"
+//        );
+//
+//        getActionMap().put("select_up", new AbstractAction()
+//        {
+//            @Override
+//            public void actionPerformed(java.awt.event.ActionEvent e)
+//            {
+//                selectIndex(selected_index - 1);
+//            }
+//        });
+//
+//        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(
+//                KeyStroke.getKeyStroke("DOWN"),
+//                "select_down"
+//        );
+//
+//        getActionMap().put("select_down", new AbstractAction()
+//        {
+//            @Override
+//            public void actionPerformed(java.awt.event.ActionEvent e)
+//            {
+//                selectIndex(selected_index + 1);
+//            }
+//        });
+
         // Ensure divider is centered initially
 //        java.awt.EventQueue.invokeLater(() -> split_pane.setDividerLocation(0.5));
 
         refresh();
+
     }
 
     private String getClipboard()
@@ -154,18 +187,22 @@ public class EntityTaggerPanel extends PluginPanel
         npc_list_panel.removeAll();
 
         List<EntityTag> tags = tag_store.getAll();
+        all_entries.clear();
+
         for (EntityTag tag : tags)
         {
             if (tag == null || tag.getScope() == null) continue;
 
+            EntityTagEntryPanel panel = new EntityTagEntryPanel(tag, tag_store, this::refresh);
+
+            all_entries.add(panel);
+
             switch(tag.getScope()){
                 case PLAYER:
-                    player_list_panel.add(new EntityTagEntryPanel(tag, tag_store, this::refresh));
+                    player_list_panel.add(panel);
                     break;
                 case NPC:
-                    npc_list_panel.add(new EntityTagEntryPanel(tag, tag_store, this::refresh));
-                    break;
-                case OBJECT:
+                    npc_list_panel.add(panel);
                     break;
             }
         }
@@ -175,6 +212,30 @@ public class EntityTaggerPanel extends PluginPanel
 
         npc_list_panel.revalidate();
         npc_list_panel.repaint();
+    }
+
+
+    private void selectIndex(int index)
+    {
+        if (all_entries.isEmpty())
+        {
+            return;
+        }
+
+        // clamp
+        index = Math.max(0, Math.min(index, all_entries.size() - 1));
+
+        if (selected_index >= 0 && selected_index < all_entries.size())
+        {
+            all_entries.get(selected_index).setSelected(false);
+        }
+
+        selected_index = index;
+
+        EntityTagEntryPanel panel = all_entries.get(selected_index);
+        panel.setSelected(true);
+        panel.requestFocusInWindow();
+        panel.scrollRectToVisible(new java.awt.Rectangle(panel.getBounds()));
     }
 
 
